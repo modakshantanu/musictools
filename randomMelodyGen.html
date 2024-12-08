@@ -94,6 +94,16 @@
             background-color: #f0f0f0;
         }
 
+        .play-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 40px;
+        }
+        
+        .play-controls button {
+            margin: 0;  /* Override the default button margin */
+        }
+
         .control {
             display: flex;
             align-items: center;
@@ -120,7 +130,11 @@
 <body>
     <div class="melody-info" id="melodyInfo"></div>
     <div class="melody-info" id="alteredNotes" style="font-size: 18px;"></div>
-    <button onclick="playInRandomKey()">Play in Random Key</button>
+    <div class="play-controls">
+        <button onclick="playInRandomKey()">Play random melody</button>
+        <button onclick="startAutoplay()" id="autoplayButton">Autoplay</button>
+        <button onclick="stopAutoplay()">Stop</button>
+    </div>
     
     <div class="settings-container">
         <div class="mode-controls">
@@ -209,6 +223,10 @@
         <div class="control">
             <span>Number of beats:</span>
             <input type="number" id="noteCount" min="1" max="32" value="8">
+        </div>
+        <div class="control">
+            <span>Beats gap between rounds:</span>
+            <input type="number" id="gapBeats" min="1" max="32" value="12">
         </div>
     </div>
 
@@ -505,9 +523,6 @@
             
             const accidentalProb = parseFloat(accidentalSlider.value);
 
-            console.log(scaleIntervals);
-            console.log(newIndex);
-            // console.log(mode)
             
             // Don't modify root note
             if (newIndex % 7 === 0) {
@@ -572,6 +587,44 @@
                     }
                 }
             }
+
+        let autoplayTimeout = null;
+        let isAutoplaying = false;
+
+        function startAutoplay() {
+            if (isAutoplaying) return;
+            isAutoplaying = true;
+            document.getElementById('autoplayButton').disabled = true;
+            playAutoSequence();
+        }
+
+        function stopAutoplay() {
+            isAutoplaying = false;
+            document.getElementById('autoplayButton').disabled = false;
+            if (autoplayTimeout) {
+                clearTimeout(autoplayTimeout);
+                autoplayTimeout = null;
+            }
+        }
+
+        function playAutoSequence() {
+            if (!isAutoplaying) return;
+
+            // Play the current sequence
+            playInRandomKey();
+
+            // Calculate the total duration before the next sequence
+            const bpm = parseInt(bpmSlider.value);
+            const beatDuration = 60 / bpm;
+            const noteCount = parseInt(document.getElementById('noteCount').value);
+            const gapBeats = parseInt(document.getElementById('gapBeats').value);
+            
+            // Total duration = initial chord (2 beats) + melody beats + gap beats
+            const totalDuration = (2 + noteCount + gapBeats) * beatDuration * 1000; // Convert to milliseconds
+
+            // Schedule the next sequence
+            autoplayTimeout = setTimeout(playAutoSequence, totalDuration);
+        }
 
         function playInRandomKey() {
             const key = keys[Math.floor(Math.random() * keys.length)];
