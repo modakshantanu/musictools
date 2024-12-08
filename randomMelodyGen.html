@@ -20,7 +20,7 @@
             font-size: 24px;
             font-weight: bold;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 5px;  /* Reduced from 20px */
         }
 
         button {
@@ -31,9 +31,10 @@
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.1s;
+            margin-top: 20px;    /* Added to control space above button */
             margin-bottom: 40px;
         }
-        
+                
         button:active {
             transform: scale(0.95);
         }
@@ -60,6 +61,38 @@
             align-items: center;
             gap: 10px;
         }
+        .mode-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .mode-option label {
+            cursor: pointer;
+            font-size: 16px;
+            padding-top: 2px;
+        }
+        
+        .mode-controls {
+            display: flex;
+            gap: 10px;
+            margin: 0 20px 10px 20px;
+        }
+        
+        .mode-controls button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #ffffff;
+            border: 1px solid #000000;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .mode-controls button:hover {
+            background-color: #f0f0f0;
+        }
 
         .control {
             display: flex;
@@ -85,43 +118,77 @@
     </style>
 </head>
 <body>
-    <div class="melody-info" id="melodyInfo">C# Melodic Minor, Start on 3rd degree</div>
+    <div class="melody-info" id="melodyInfo"></div>
+    <div class="melody-info" id="alteredNotes" style="font-size: 18px;"></div>
     <button onclick="playInRandomKey()">Play in Random Key</button>
     
     <div class="settings-container">
+        <div class="mode-controls">
+            <button onclick="selectAllModes()">Select All</button>
+            <button onclick="clearAllModes()">Clear All</button>
+        </div>
         <div class="modes-container">
             <div class="mode-option">
                 <input type="checkbox" id="mode-major" checked>
                 <label for="mode-major">Major</label>
             </div>
             <div class="mode-option">
-                <input type="checkbox" id="mode-dorian" checked>
+                <input type="checkbox" id="mode-dorian">
                 <label for="mode-dorian">Dorian</label>
             </div>
             <div class="mode-option">
-                <input type="checkbox" id="mode-phrygian" checked>
+                <input type="checkbox" id="mode-phrygian">
                 <label for="mode-phrygian">Phrygian</label>
             </div>
             <div class="mode-option">
-                <input type="checkbox" id="mode-lydian" checked>
+                <input type="checkbox" id="mode-lydian">
                 <label for="mode-lydian">Lydian</label>
             </div>
             <div class="mode-option">
-                <input type="checkbox" id="mode-mixolydian" checked>
+                <input type="checkbox" id="mode-mixolydian">
                 <label for="mode-mixolydian">Mixolydian</label>
             </div>
             <div class="mode-option">
-                <input type="checkbox" id="mode-aeolian" checked>
+                <input type="checkbox" id="mode-aeolian">
                 <label for="mode-aeolian">Aeolian</label>
             </div>
             <div class="mode-option">
-                <input type="checkbox" id="mode-melodicMinor" checked>
+                <input type="checkbox" id="mode-melodicMinor">
                 <label for="mode-melodicMinor">Melodic Minor</label>
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-harmonicMinor" checked>
                 <label for="mode-harmonicMinor">Harmonic Minor</label>
             </div>
+            <div class="mode-option">
+                <input type="checkbox" id="mode-charukeshi">
+                <label for="mode-charukeshi">Charukeshi</label>
+            </div> 
+            <div class="mode-option">
+                <input type="checkbox" id="mode-madhuvanti">
+                <label for="mode-madhuvanti">Madhuvanti</label>
+            </div>
+            <div class="mode-option">
+                <input type="checkbox" id="mode-ahirbhairav">
+                <label for="mode-ahirbhairav">Ahir Bhairav</label>
+            </div>
+            <div class="mode-option">
+                <input type="checkbox" id="mode-bhairav">
+                <label for="mode-bhairav">Bhairav</label>
+            </div>
+            <div class="mode-option">
+                <input type="checkbox" id="mode-purvi">
+                <label for="mode-purvi">Purvi</label>
+            </div>
+            <div class="mode-option">
+                <input type="checkbox" id="mode-marwa">
+                <label for="mode-marwa">Marwa</label>
+            </div>  
+            <div class="mode-option">
+                <input type="checkbox" id="mode-todi">
+                <label for="mode-todi">Todi</label>
+            </div> 
+                    
         </div>
         <div class="control">
             <input type="range" id="bpmSlider" min="60" max="180" value="120" step="1">
@@ -136,39 +203,47 @@
             <span id="jumpinessValue">Jumpiness: 20%</span>
         </div>
         <div class="control">
-            <span>Number of notes:</span>
+            <input type="range" id="quaverSlider" min="0" max="100" value="20" step="5">
+            <span id="quaverValue">Percent of 1/8th notes: 20%</span>
+        </div>
+        <div class="control">
+            <span>Number of beats:</span>
             <input type="number" id="noteCount" min="1" max="32" value="8">
         </div>
     </div>
 
     <script>
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
+        const quaverSlider = document.getElementById('quaverSlider');
+        const quaverValue = document.getElementById('quaverValue');
+
+        quaverSlider.addEventListener('input', () => {
+            quaverValue.textContent = `Quaver: ${quaverSlider.value}%`;
+        });
         const keys = [
-            { name: 'C', frequency: 130.81, noteName: 'C3' },     // Was 261.63
-            { name: 'C#', frequency: 138.59, noteName: 'C#3' },   // Was 277.18
-            { name: 'D', frequency: 146.83, noteName: 'D3' },     // Was 293.66
-            { name: 'D#', frequency: 155.56, noteName: 'D#3' },   // Was 311.13
-            { name: 'E', frequency: 164.81, noteName: 'E3' },     // Was 329.63
-            { name: 'F', frequency: 174.61, noteName: 'F3' },     // Was 349.23
-            { name: 'F#', frequency: 185.00, noteName: 'F#3' },   // Was 369.99
-            { name: 'G', frequency: 196.00, noteName: 'G3' },     // Was 392.00
-            { name: 'G#', frequency: 207.65, noteName: 'G#3' },   // Was 415.30
-            { name: 'A', frequency: 220.00, noteName: 'A3' },     // Was 440.00
-            { name: 'A#', frequency: 233.08, noteName: 'A#3' },   // Was 466.16
-            { name: 'B', frequency: 246.94, noteName: 'B3' }      // Was 493.88
+            { name: 'C', frequency: 130.81, noteName: 'C3' },   
+            { name: 'C#', frequency: 138.59, noteName: 'C#3' }, 
+            { name: 'D', frequency: 146.83, noteName: 'D3' },   
+            { name: 'Eb', frequency: 155.56, noteName: 'D#3' }, 
+            { name: 'E', frequency: 164.81, noteName: 'E3' },   
+            { name: 'F', frequency: 174.61, noteName: 'F3' },   
+            { name: 'F#', frequency: 185.00, noteName: 'F#3' }, 
+            { name: 'G', frequency: 196.00, noteName: 'G3' },   
+            { name: 'Ab', frequency: 207.65, noteName: 'G#3' }, 
+            { name: 'A', frequency: 220.00, noteName: 'A3' },   
+            { name: 'Bb', frequency: 233.08, noteName: 'A#3' }, 
+            { name: 'B', frequency: 246.94, noteName: 'B3' }    
         ];
 
         // Scale degree names
         const scalePositionNames = [
-            "Root (1st)",
+            "Root",
             "2nd",
             "3rd",
             "4th",
             "5th",
             "6th",
             "7th",
-            "Octave"
         ];
 
         // Mode definitions using arrays of booleans for degrees 2,3,4,6,7
@@ -180,27 +255,27 @@
                 chordType: "major"
             },
             dorian: {
-                name: "Dorian",
+                name: "Dorian (Kafi)",
                 degrees: [false, true, false, false, true],
                 chordType: "minor"
             },
             phrygian: {
-                name: "Phrygian",
+                name: "Phrygian (Bhairavi)",
                 degrees: [true, true, false, false, true],
                 chordType: "minor"
             },
             lydian: {
-                name: "Lydian",
+                name: "Lydian (Kalyan)",
                 degrees: [false, false, true, false, false],
                 chordType: "major"
             },
             mixolydian: {
-                name: "Mixolydian",
+                name: "Mixolydian (Khamaj)",
                 degrees: [false, false, false, false, true],
                 chordType: "major"
             },
             aeolian: {
-                name: "Aeolian",
+                name: "Aeolian (Asavari)",
                 degrees: [false, true, false, true, true],
                 chordType: "minor"
             },
@@ -213,7 +288,14 @@
                 name: "Harmonic Minor",
                 degrees: [false, true, false, true, false],
                 chordType: "minor"
-            }
+            },
+            charukeshi: {name: "Charukeshi", degrees: [false, false, false, true, true], chordType: "major"},
+            madhuvanti: {name: "Madhuvanti", degrees: [false, true, true, false, false], chordType: "minor"},
+            ahirbhairav: {name: "Ahir Bhairav", degrees: [true, false, false, false, true], chordType: "major"},
+            bhairav: {name: "Bhairav", degrees: [true, false, false, true, false], chordType: "major"},
+            purvi: {name: "Purvi", degrees: [true, false, true, true, false], chordType: "major"},
+            marwa: {name: "Marwa", degrees: [true, false, true, false, false], chordType: "major"},
+            todi: {name: "Todi", degrees: [true, true, true, true, false], chordType: "minor"},
         };
 
         // Scale degrees relative to root (in semitones)
@@ -226,11 +308,16 @@
 
         function getScaleIntervals(mode) {
             const intervals = [...scaleBaseIntervals];
-            if (mode.degrees[0]) intervals[1]--;     // 2nd degree
-            if (mode.degrees[1]) intervals[2]--;     // 3rd degree
-            if (mode.degrees[2]) intervals[3]++;     // 4th degree (sharp instead of flat)
-            if (mode.degrees[3]) intervals[5]--;     // 6th degree
-            if (mode.degrees[4]) intervals[6]--;     // 7th degree
+            // Apply alterations for each octave
+            for (let octave = 0; octave < 3; octave++) {
+                const offset = octave * 7; // Starting index for each octave
+                
+                if (mode.degrees[0]) intervals[offset + 1]--;     // 2nd degree
+                if (mode.degrees[1]) intervals[offset + 2]--;     // 3rd degree
+                if (mode.degrees[2]) intervals[offset + 3]++;     // 4th degree (sharp)
+                if (mode.degrees[3]) intervals[offset + 5]--;     // 6th degree
+                if (mode.degrees[4]) intervals[offset + 6]--;     // 7th degree
+            }
             return intervals;
         }
 
@@ -259,6 +346,17 @@
         jumpinessSlider.addEventListener('input', () => {
             jumpinessValue.textContent = `Jumpiness: ${jumpinessSlider.value}%`;
         });
+
+        function getAlteredNotes(mode) {
+            const alterations = [];
+            if (mode.degrees[0]) alterations.push('♭2');
+            if (mode.degrees[1]) alterations.push('♭3');
+            if (mode.degrees[2]) alterations.push('♯4');
+            if (mode.degrees[3]) alterations.push('♭6');
+            if (mode.degrees[4]) alterations.push('♭7');
+            
+            return alterations.length > 0 ? `${alterations.join(', ')}` : 'No altered notes';
+        }
 
         function calculateJumpProbabilities(currentNoteIndex, maxIndex, jumpiness) {
             const j = jumpiness / 100;  // Convert from percentage to 0-1
@@ -366,6 +464,20 @@
             });
         }
 
+        function selectAllModes() {
+            Object.keys(modes).forEach(mode => {
+                const checkbox = document.getElementById(`mode-${mode}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        function clearAllModes() {
+            Object.keys(modes).forEach(mode => {
+                const checkbox = document.getElementById(`mode-${mode}`);
+                if (checkbox) checkbox.checked = false;
+            });
+        }
+
         function getRandomNaturalNote(baseFrequency, mode) {
             const scaleIntervals = getScaleIntervals(mode);
             // Pick from middle octave for starting note
@@ -379,6 +491,7 @@
                 index: scaleIndex
             };
         }
+        
 
         function getRandomScaleNote(baseFrequency, mode, currentNoteIndex) {
             const scaleIntervals = getScaleIntervals(mode);
@@ -391,6 +504,10 @@
 
             
             const accidentalProb = parseFloat(accidentalSlider.value);
+
+            console.log(scaleIntervals);
+            console.log(newIndex);
+            // console.log(mode)
             
             // Don't modify root note
             if (newIndex % 7 === 0) {
@@ -425,28 +542,46 @@
             };
             }
 
-        function playMelodyInKey(baseFrequency, mode, startTime, beatDuration, startingNote) {
-            const noteCount = parseInt(document.getElementById('noteCount').value);
-            let currentNoteIndex = startingNote.index;
-            
-            playNote(startingNote.frequency, startTime, beatDuration * 0.9);
-            
-            for (let i = 1; i < noteCount; i++) {
-                const noteStartTime = startTime + (i * beatDuration);
-                const nextNote = getRandomScaleNote(baseFrequency, mode, currentNoteIndex);
-                playNote(nextNote.frequency, noteStartTime, beatDuration * 0.9);
-                currentNoteIndex = nextNote.index;
+            function playMelodyInKey(baseFrequency, mode, startTime, beatDuration, startingNote) {
+                const noteCount = parseInt(document.getElementById('noteCount').value);
+                const quaverProb = parseFloat(document.getElementById('quaverSlider').value) / 100;
+                let currentNoteIndex = startingNote.index;
+                let currentTime = 0;
+                
+                // Play first note (always full beat)
+                playNote(startingNote.frequency, startTime, beatDuration * 0.9);
+                currentTime += beatDuration;
+                
+                for (let i = 1; i < noteCount; i++) {
+                    const isQuaver = Math.random() < quaverProb;
+                    const noteDuration = isQuaver ? beatDuration / 2 : beatDuration;
+                    
+                    const nextNote = getRandomScaleNote(baseFrequency, mode, currentNoteIndex);
+                    playNote(nextNote.frequency, startTime + currentTime, noteDuration * 0.9);
+                    
+                    currentTime += noteDuration;
+                    
+                    // If this was a quaver, we need another note to complete the beat
+                    if (isQuaver && i < noteCount - 1) {
+                        const secondQuaver = getRandomScaleNote(baseFrequency, mode, nextNote.index);
+                        playNote(secondQuaver.frequency, startTime + currentTime, noteDuration * 0.9);
+                        currentTime += noteDuration;
+                        currentNoteIndex = secondQuaver.index;
+                    } else {
+                        currentNoteIndex = nextNote.index;
+                    }
+                }
             }
-        }
 
         function playInRandomKey() {
             const key = keys[Math.floor(Math.random() * keys.length)];
             const mode = getRandomMode();
             const startingNoteInfo = getRandomNaturalNote(key.frequency, mode);
             
-            // Update the display format
+            // Update the displays
             document.getElementById('melodyInfo').textContent = 
                 `${key.name} ${mode.name}, Start on ${startingNoteInfo.scaleDegree}`;
+            document.getElementById('alteredNotes').textContent = getAlteredNotes(mode);
             
             const beatDuration = getBeatDuration();
             const startTime = audioContext.currentTime;
