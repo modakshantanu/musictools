@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Modal Melody Player</title>
+    <title>Random Melody Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             display: flex;
@@ -9,121 +10,155 @@
             gap: 20px;
             justify-content: flex-start;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            padding-top: 40px;
+            padding: 20px;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            box-sizing: border-box;
         }
         
         .melody-info {
-            font-size: 24px;
+            font-size: clamp(24px, 5vw, 32px);
             font-weight: bold;
             text-align: center;
-            margin-bottom: 5px;  /* Reduced from 20px */
+            margin-bottom: 5px;
+            padding: 0 10px;
         }
 
+        #alteredNotes {
+            font-size: clamp(18px, 4vw, 24px) !important;
+            margin-bottom: 20px;
+        }
+
+        .play-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
         button {
-            padding: 20px 40px;
-            font-size: 24px;
+            padding: 15px 30px;
+            font-size: clamp(16px, 4vw, 24px);
             background-color: #ffffff;
             border: 2px solid #000000;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.1s;
-            margin-top: 20px;    /* Added to control space above button */
-            margin-bottom: 40px;
+            flex: 1;
+            min-width: 150px;
+            margin: 0;
         }
-                
+        
         button:active {
             transform: scale(0.95);
         }
 
         .settings-container {
-            margin-top: auto;
-            margin-bottom: 40px;
             width: 100%;
             max-width: 600px;
+            padding: 0 10px;
+            box-sizing: border-box;
         }
 
         .modes-container {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 10px;
-            margin: 20px;
+            margin: 20px 0;
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 8px;
+            background-color: white;
+        }
+
+        .mode-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .mode-controls button {
+            padding: 8px 16px;
+            font-size: 16px;
+            min-width: auto;
         }
 
         .mode-option {
             display: flex;
             align-items: center;
             gap: 10px;
+            padding: 5px;
         }
+
         .mode-option input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             cursor: pointer;
         }
 
         .mode-option label {
             cursor: pointer;
-            font-size: 16px;
+            font-size: clamp(14px, 3vw, 16px);
             padding-top: 2px;
-        }
-        
-        .mode-controls {
-            display: flex;
-            gap: 10px;
-            margin: 0 20px 10px 20px;
-        }
-        
-        .mode-controls button {
-            padding: 8px 16px;
-            font-size: 16px;
-            background-color: #ffffff;
-            border: 1px solid #000000;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0;
-            flex: 1;
-        }
-        
-        .mode-controls button:hover {
-            background-color: #f0f0f0;
-        }
-
-        .play-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 40px;
-        }
-        
-        .play-controls button {
-            margin: 0;  /* Override the default button margin */
         }
 
         .control {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 8px;
+            flex-wrap: wrap;
         }
 
         .control input {
             width: 200px;
+            max-width: 100%;
         }
 
         .control span {
-            font-size: 18px;
+            font-size: clamp(14px, 3vw, 18px);
             min-width: 120px;
+            flex: 1;
         }
 
         .control input[type="number"] {
             width: 80px;
-            padding: 5px;
+            padding: 8px;
             font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .control {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            
+            .control input {
+                width: 100%;
+            }
+            
+            .control input[type="number"] {
+                width: 100%;
+            }
+            
+            button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -137,9 +172,31 @@
     </div>
     
     <div class="settings-container">
-        <div class="mode-controls">
-            <button onclick="selectAllModes()">Select All</button>
-            <button onclick="clearAllModes()">Clear All</button>
+
+
+        <div class="control">
+            <input type="range" id="bpmSlider" min="60" max="180" value="120" step="1">
+            <span id="bpmValue">120 BPM</span>
+        </div>
+        <div class="control">
+            <input type="range" id="accidentalSlider" min="0" max="0.5" value="0.1" step="0.05">
+            <span id="accidentalValue">10% Accidentals</span>
+        </div>
+        <div class="control">
+            <input type="range" id="jumpinessSlider" min="0" max="100" value="20" step="5">
+            <span id="jumpinessValue">Jumpiness: 20%</span>
+        </div>
+        <div class="control">
+            <input type="range" id="quaverSlider" min="0" max="100" value="20" step="5">
+            <span id="quaverValue">Percent of 1/8th notes: 20%</span>
+        </div>
+        <div class="control">
+            <span>Number of beats:</span>
+            <input type="number" id="noteCount" min="1" max="32" value="8">
+        </div>
+        <div class="control">
+            <span>Beats gap between rounds:</span>
+            <input type="number" id="gapBeats" min="1" max="32" value="12">
         </div>
         <div class="modes-container">
             <div class="mode-option">
@@ -204,29 +261,9 @@
             </div> 
                     
         </div>
-        <div class="control">
-            <input type="range" id="bpmSlider" min="60" max="180" value="120" step="1">
-            <span id="bpmValue">120 BPM</span>
-        </div>
-        <div class="control">
-            <input type="range" id="accidentalSlider" min="0" max="0.5" value="0.1" step="0.05">
-            <span id="accidentalValue">10% Accidentals</span>
-        </div>
-        <div class="control">
-            <input type="range" id="jumpinessSlider" min="0" max="100" value="20" step="5">
-            <span id="jumpinessValue">Jumpiness: 20%</span>
-        </div>
-        <div class="control">
-            <input type="range" id="quaverSlider" min="0" max="100" value="20" step="5">
-            <span id="quaverValue">Percent of 1/8th notes: 20%</span>
-        </div>
-        <div class="control">
-            <span>Number of beats:</span>
-            <input type="number" id="noteCount" min="1" max="32" value="8">
-        </div>
-        <div class="control">
-            <span>Beats gap between rounds:</span>
-            <input type="number" id="gapBeats" min="1" max="32" value="12">
+        <div class="mode-controls">
+            <button onclick="selectAllModes()">Select All</button>
+            <button onclick="clearAllModes()">Clear All</button>
         </div>
     </div>
 
