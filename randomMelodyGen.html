@@ -678,7 +678,7 @@
             clearSargam();
 
             // Handle auto-show sargam
-            const delayBeats =  parseInt(document.getElementById('sargamDelay').value);
+            const delayBeats =  parseInt(document.getElementById('sargamDelay').value) + 2; // Add 2 for initial chord
             if (delayBeats >= 0) {
                 const delayMs = delayBeats * beatDuration * 1000;
                 sargamShowTimer = setTimeout(() => {
