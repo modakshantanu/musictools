@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Random Melody Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +18,7 @@
             font-family: Arial, sans-serif;
             box-sizing: border-box;
         }
-        
+
         .melody-info {
             font-size: clamp(24px, 5vw, 32px);
             font-weight: bold;
@@ -40,7 +41,7 @@
             width: 100%;
             max-width: 600px;
         }
-        
+
         button {
             padding: 15px 30px;
             font-size: clamp(16px, 4vw, 24px);
@@ -53,7 +54,7 @@
             min-width: 150px;
             margin: 0;
         }
-        
+
         button:active {
             transform: scale(0.95);
         }
@@ -81,7 +82,7 @@
             gap: 10px;
             margin-bottom: 10px;
         }
-        
+
         .mode-controls button {
             padding: 8px 16px;
             font-size: 16px;
@@ -141,36 +142,38 @@
             body {
                 padding: 10px;
             }
-            
+
             .control {
                 flex-direction: column;
                 align-items: stretch;
                 text-align: center;
             }
-            
+
             .control input {
                 width: 100%;
             }
-            
+
             .control input[type="number"] {
                 width: 100%;
             }
-            
+
             button {
                 width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="melody-info" id="melodyInfo"></div>
     <div class="melody-info" id="alteredNotes" style="font-size: 18px;"></div>
     <div class="play-controls">
-        <button onclick="playInRandomKey()">Play random melody</button>
+        <button onclick="playInRandomKey()">Generate random melody</button>
+        <button onclick="replayLastMelody()">Replay last melody</button>
         <button onclick="startAutoplay()" id="autoplayButton">Autoplay</button>
         <button onclick="stopAutoplay()">Stop</button>
     </div>
-    
+
     <div class="settings-container">
 
 
@@ -188,7 +191,7 @@
         </div>
         <div class="control">
             <input type="range" id="quaverSlider" min="0" max="100" value="20" step="5">
-            <span id="quaverValue">Percent of 1/8th notes: 20%</span>
+            <span id="quaverValue">20% Eighth notes</span>
         </div>
         <div class="control">
             <span>Number of beats:</span>
@@ -205,23 +208,23 @@
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-dorian">
-                <label for="mode-dorian">Dorian</label>
+                <label for="mode-dorian">Dorian (Kafi)</label>
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-phrygian">
-                <label for="mode-phrygian">Phrygian</label>
+                <label for="mode-phrygian">Phrygian (Bhairavi)</label>
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-lydian">
-                <label for="mode-lydian">Lydian</label>
+                <label for="mode-lydian">Lydian (Kalyan)</label>
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-mixolydian">
-                <label for="mode-mixolydian">Mixolydian</label>
+                <label for="mode-mixolydian">Mixolydian (Khamaj)</label>
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-aeolian">
-                <label for="mode-aeolian">Aeolian</label>
+                <label for="mode-aeolian">Aeolian (Asavari)</label>
             </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-melodicMinor">
@@ -234,7 +237,7 @@
             <div class="mode-option">
                 <input type="checkbox" id="mode-charukeshi">
                 <label for="mode-charukeshi">Charukeshi</label>
-            </div> 
+            </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-madhuvanti">
                 <label for="mode-madhuvanti">Madhuvanti</label>
@@ -254,12 +257,12 @@
             <div class="mode-option">
                 <input type="checkbox" id="mode-marwa">
                 <label for="mode-marwa">Marwa</label>
-            </div>  
+            </div>
             <div class="mode-option">
                 <input type="checkbox" id="mode-todi">
                 <label for="mode-todi">Todi</label>
-            </div> 
-                    
+            </div>
+
         </div>
         <div class="mode-controls">
             <button onclick="selectAllModes()">Select All</button>
@@ -273,21 +276,21 @@
         const quaverValue = document.getElementById('quaverValue');
 
         quaverSlider.addEventListener('input', () => {
-            quaverValue.textContent = `Percent of 1/8th notes: ${quaverSlider.value}%`;
+            quaverValue.textContent = `${quaverSlider.value}% Eighth notes`;
         });
         const keys = [
-            { name: 'C', frequency: 130.81, noteName: 'C3' },   
-            { name: 'C#', frequency: 138.59, noteName: 'C#3' }, 
-            { name: 'D', frequency: 146.83, noteName: 'D3' },   
-            { name: 'Eb', frequency: 155.56, noteName: 'D#3' }, 
-            { name: 'E', frequency: 164.81, noteName: 'E3' },   
-            { name: 'F', frequency: 174.61, noteName: 'F3' },   
-            { name: 'F#', frequency: 185.00, noteName: 'F#3' }, 
-            { name: 'G', frequency: 196.00, noteName: 'G3' },   
-            { name: 'Ab', frequency: 207.65, noteName: 'G#3' }, 
-            { name: 'A', frequency: 220.00, noteName: 'A3' },   
-            { name: 'Bb', frequency: 233.08, noteName: 'A#3' }, 
-            { name: 'B', frequency: 246.94, noteName: 'B3' }    
+            { name: 'C', frequency: 130.81, noteName: 'C3' },
+            { name: 'C#', frequency: 138.59, noteName: 'C#3' },
+            { name: 'D', frequency: 146.83, noteName: 'D3' },
+            { name: 'Eb', frequency: 155.56, noteName: 'D#3' },
+            { name: 'E', frequency: 164.81, noteName: 'E3' },
+            { name: 'F', frequency: 174.61, noteName: 'F3' },
+            { name: 'F#', frequency: 185.00, noteName: 'F#3' },
+            { name: 'G', frequency: 196.00, noteName: 'G3' },
+            { name: 'Ab', frequency: 207.65, noteName: 'G#3' },
+            { name: 'A', frequency: 220.00, noteName: 'A3' },
+            { name: 'Bb', frequency: 233.08, noteName: 'A#3' },
+            { name: 'B', frequency: 246.94, noteName: 'B3' }
         ];
 
         // Scale degree names
@@ -300,6 +303,8 @@
             "6th",
             "7th",
         ];
+
+        let lastMelody = null;
 
         // Mode definitions using arrays of booleans for degrees 2,3,4,6,7
         // false = natural, true = flat (except for 4th: true = sharp)
@@ -344,18 +349,18 @@
                 degrees: [false, true, false, true, false],
                 chordType: "minor"
             },
-            charukeshi: {name: "Charukeshi", degrees: [false, false, false, true, true], chordType: "major"},
-            madhuvanti: {name: "Madhuvanti", degrees: [false, true, true, false, false], chordType: "minor"},
-            ahirbhairav: {name: "Ahir Bhairav", degrees: [true, false, false, false, true], chordType: "major"},
-            bhairav: {name: "Bhairav", degrees: [true, false, false, true, false], chordType: "major"},
-            purvi: {name: "Purvi", degrees: [true, false, true, true, false], chordType: "major"},
-            marwa: {name: "Marwa", degrees: [true, false, true, false, false], chordType: "major"},
-            todi: {name: "Todi", degrees: [true, true, true, true, false], chordType: "minor"},
+            charukeshi: { name: "Charukeshi", degrees: [false, false, false, true, true], chordType: "major" },
+            madhuvanti: { name: "Madhuvanti", degrees: [false, true, true, false, false], chordType: "minor" },
+            ahirbhairav: { name: "Ahir Bhairav", degrees: [true, false, false, false, true], chordType: "major" },
+            bhairav: { name: "Bhairav", degrees: [true, false, false, true, false], chordType: "major" },
+            purvi: { name: "Purvi", degrees: [true, false, true, true, false], chordType: "major" },
+            marwa: { name: "Marwa", degrees: [true, false, true, false, false], chordType: "major" },
+            todi: { name: "Todi", degrees: [true, true, true, true, false], chordType: "minor" },
         };
 
         // Scale degrees relative to root (in semitones)
         const scaleBaseIntervals = Array(22).fill(0).map((_, i) => {
-            const basePattern = [0,2,4,5,7,9,11];
+            const basePattern = [0, 2, 4, 5, 7, 9, 11];
             const octave = Math.floor(i / 7);  // 0, 1, or 2 for the octave number
             const noteIndex = i % 7;  // 0-6 for the note within the octave
             return basePattern[noteIndex] + (octave * 12);
@@ -366,7 +371,7 @@
             // Apply alterations for each octave
             for (let octave = 0; octave < 3; octave++) {
                 const offset = octave * 7; // Starting index for each octave
-                
+
                 if (mode.degrees[0]) intervals[offset + 1]--;     // 2nd degree
                 if (mode.degrees[1]) intervals[offset + 2]--;     // 3rd degree
                 if (mode.degrees[2]) intervals[offset + 3]++;     // 4th degree (sharp)
@@ -409,7 +414,7 @@
             if (mode.degrees[2]) alterations.push('♯4');
             if (mode.degrees[3]) alterations.push('♭6');
             if (mode.degrees[4]) alterations.push('♭7');
-            
+
             return alterations.length > 0 ? `${alterations.join(', ')}` : 'No altered notes';
         }
 
@@ -417,7 +422,7 @@
             const j = jumpiness / 100;  // Convert from percentage to 0-1
             let probs = [];
             let sum = 0;
-            
+
             // Calculate for each possible destination note
             for (let i = 0; i <= maxIndex; i++) {
                 if (i === currentNoteIndex) {
@@ -429,7 +434,7 @@
                     sum += prob;
                 }
             }
-            
+
             // Normalize
             return probs.map(p => p / sum);
         }
@@ -437,17 +442,17 @@
         function chooseNextNoteIndex(currentNoteIndex, probs) {
             const rand = Math.random();
             let cumulative = 0;
-            
+
             for (let i = 0; i < probs.length; i++) {
                 cumulative += probs[i];
                 if (rand < cumulative) return i;
             }
-            
+
             return probs.length - 1;  // Fallback
         }
 
         function getRandomMode() {
-            const availableModes = Object.entries(modes).filter(([key]) => 
+            const availableModes = Object.entries(modes).filter(([key]) =>
                 document.getElementById(`mode-${key}`).checked
             ).map(([_, mode]) => mode);
 
@@ -468,15 +473,15 @@
         function playNote(frequency, startTime, duration) {
             const oscillators = [];
             const gainNode = audioContext.createGain();
-            
+
             const osc1 = audioContext.createOscillator();
             osc1.type = 'triangle';
             osc1.frequency.setValueAtTime(frequency, startTime);
-            
+
             const osc2 = audioContext.createOscillator();
             osc2.type = 'sine';
             osc2.frequency.setValueAtTime(frequency * 2, startTime);
-            
+
             const osc3 = audioContext.createOscillator();
             osc3.type = 'sine';
             osc3.frequency.setValueAtTime(frequency * 3, startTime);
@@ -499,13 +504,13 @@
 
             gainNode.gain.setValueAtTime(1, startTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration - 0.05);
-            
+
             gainNode.connect(audioContext.destination);
-            
+
             osc1.start(startTime);
             osc2.start(startTime);
             osc3.start(startTime);
-            
+
             osc1.stop(startTime + duration);
             osc2.stop(startTime + duration);
             osc3.stop(startTime + duration);
@@ -546,7 +551,7 @@
                 index: scaleIndex
             };
         }
-        
+
 
         function getRandomScaleNote(baseFrequency, mode, currentNoteIndex) {
             const scaleIntervals = getScaleIntervals(mode);
@@ -557,10 +562,10 @@
             const newIndex = chooseNextNoteIndex(currentNoteIndex, probs);
             const baseInterval = scaleIntervals[newIndex];
 
-            
+
             const accidentalProb = parseFloat(accidentalSlider.value);
 
-            
+
             // Don't modify root note
             if (newIndex % 7 === 0) {
                 return {
@@ -568,10 +573,10 @@
                     index: newIndex
                 };
             }
-            
+
             // For degrees 2,3,4,6,7 (indices 1,2,3,5,6), invert the flatness/sharpness
             if (newIndex % 7 > 0 && Math.random() < accidentalProb) {
-                const degreeIndex = [1,2,3,5,6].indexOf(newIndex % 7);
+                const degreeIndex = [1, 2, 3, 5, 6].indexOf(newIndex % 7);
                 if (degreeIndex !== -1) {
                     // For 4th degree, sharp becomes natural and natural becomes sharp
                     if (newIndex % 7 === 3) {
@@ -587,43 +592,141 @@
                     };
                 }
             }
-            
+
             return {
                 frequency: getFrequency(baseFrequency, baseInterval),
                 index: newIndex
             };
-            }
+        }
 
-            function playMelodyInKey(baseFrequency, mode, startTime, beatDuration, startingNote) {
-                const noteCount = parseInt(document.getElementById('noteCount').value);
-                const quaverProb = parseFloat(document.getElementById('quaverSlider').value) / 100;
-                let currentNoteIndex = startingNote.index;
-                let currentTime = 0;
-                
-                // Play first note (always full beat)
-                playNote(startingNote.frequency, startTime, beatDuration * 0.9);
-                currentTime += beatDuration;
-                
-                for (let i = 1; i < noteCount; i++) {
-                    const isQuaver = Math.random() < quaverProb;
-                    const noteDuration = isQuaver ? beatDuration / 2 : beatDuration;
-                    
-                    const nextNote = getRandomScaleNote(baseFrequency, mode, currentNoteIndex);
-                    playNote(nextNote.frequency, startTime + currentTime, noteDuration * 0.9);
-                    
-                    currentTime += noteDuration;
-                    
-                    // If this was a quaver, we need another note to complete the beat
-                    if (isQuaver && i < noteCount - 1) {
-                        const secondQuaver = getRandomScaleNote(baseFrequency, mode, nextNote.index);
-                        playNote(secondQuaver.frequency, startTime + currentTime, noteDuration * 0.9);
-                        currentTime += noteDuration;
-                        currentNoteIndex = secondQuaver.index;
-                    } else {
-                        currentNoteIndex = nextNote.index;
-                    }
+        function generateMelody() {
+            const key = keys[Math.floor(Math.random() * keys.length)];
+            const mode = getRandomMode();
+            const startingNoteInfo = getRandomNaturalNote(key.frequency, mode);
+            const noteCount = parseInt(document.getElementById('noteCount').value);
+            const quaverProb = parseFloat(document.getElementById('quaverSlider').value) / 100;
+
+            let melody = {
+                key: key,
+                mode: mode,
+                startingNote: startingNoteInfo,
+                notes: []
+            };
+
+            let currentNoteIndex = startingNoteInfo.index;
+
+            // First note (always full beat)
+            melody.notes.push({
+                frequency: startingNoteInfo.frequency,
+                duration: 1 // full beat
+            });
+
+            for (let i = 1; i < noteCount; i++) {
+                const isQuaver = Math.random() < quaverProb;
+                const duration = isQuaver ? 0.5 : 1;
+
+                const nextNote = getRandomScaleNote(key.frequency, mode, currentNoteIndex);
+                melody.notes.push({
+                    frequency: nextNote.frequency,
+                    duration: duration
+                });
+
+                // If this was a quaver, we need another note to complete the beat
+                if (isQuaver && i < noteCount - 1) {
+                    const secondQuaver = getRandomScaleNote(key.frequency, mode, nextNote.index);
+                    melody.notes.push({
+                        frequency: secondQuaver.frequency,
+                        duration: 0.5
+                    });
+                    currentNoteIndex = secondQuaver.index;
+                    i++; // Increment i since we've added two notes
+                } else {
+                    currentNoteIndex = nextNote.index;
                 }
             }
+
+            return melody;
+        }
+
+        function playMelody(melody) {
+            const beatDuration = getBeatDuration();
+            const startTime = audioContext.currentTime;
+
+            // Update the displays
+            document.getElementById('melodyInfo').textContent =
+                `${melody.key.name} ${melody.mode.name}, Start on ${melody.startingNote.scaleDegree}`;
+            document.getElementById('alteredNotes').textContent = getAlteredNotes(melody.mode);
+
+            // Play initial chord
+            playChord(melody.key.frequency, melody.mode, startTime, beatDuration * 2);
+
+            // Play melody notes
+            let currentTime = beatDuration * 2; // Start after the chord
+            melody.notes.forEach(note => {
+                playNote(note.frequency, startTime + currentTime, note.duration * beatDuration * 0.9);
+                currentTime += note.duration * beatDuration;
+            });
+        }
+
+        function playInRandomKey() {
+            lastMelody = generateMelody();
+            playMelody(lastMelody);
+        }
+
+        function replayLastMelody() {
+            if (lastMelody) {
+                playMelody(lastMelody);
+            }
+        }
+
+        function playAutoSequence() {
+            if (!isAutoplaying) return;
+
+            playInRandomKey();
+
+            // Calculate the total duration before the next sequence
+            const bpm = parseInt(bpmSlider.value);
+            const beatDuration = 60 / bpm;
+            const noteCount = parseInt(document.getElementById('noteCount').value);
+            const gapBeats = parseInt(document.getElementById('gapBeats').value);
+
+            // Total duration = initial chord (2 beats) + melody beats + gap beats
+            const totalDuration = (2 + noteCount + gapBeats) * beatDuration * 1000;
+
+            autoplayTimeout = setTimeout(playAutoSequence, totalDuration);
+        }
+
+
+        function playMelodyInKey(baseFrequency, mode, startTime, beatDuration, startingNote) {
+            const noteCount = parseInt(document.getElementById('noteCount').value);
+            const quaverProb = parseFloat(document.getElementById('quaverSlider').value) / 100;
+            let currentNoteIndex = startingNote.index;
+            let currentTime = 0;
+
+            // Play first note (always full beat)
+            playNote(startingNote.frequency, startTime, beatDuration * 0.9);
+            currentTime += beatDuration;
+
+            for (let i = 1; i < noteCount; i++) {
+                const isQuaver = Math.random() < quaverProb;
+                const noteDuration = isQuaver ? beatDuration / 2 : beatDuration;
+
+                const nextNote = getRandomScaleNote(baseFrequency, mode, currentNoteIndex);
+                playNote(nextNote.frequency, startTime + currentTime, noteDuration * 0.9);
+
+                currentTime += noteDuration;
+
+                // If this was a quaver, we need another note to complete the beat
+                if (isQuaver && i < noteCount - 1) {
+                    const secondQuaver = getRandomScaleNote(baseFrequency, mode, nextNote.index);
+                    playNote(secondQuaver.frequency, startTime + currentTime, noteDuration * 0.9);
+                    currentTime += noteDuration;
+                    currentNoteIndex = secondQuaver.index;
+                } else {
+                    currentNoteIndex = nextNote.index;
+                }
+            }
+        }
 
         let autoplayTimeout = null;
         let isAutoplaying = false;
@@ -644,42 +747,99 @@
             }
         }
 
-        function playAutoSequence() {
-            if (!isAutoplaying) return;
+        function saveSettings() {
+            const settings = {
+                bpm: bpmSlider.value,
+                accidentalProb: accidentalSlider.value,
+                jumpiness: jumpinessSlider.value,
+                quaverProb: quaverSlider.value,
+                noteCount: document.getElementById('noteCount').value,
+                gapBeats: document.getElementById('gapBeats').value,
+                modes: Object.keys(modes).reduce((acc, mode) => {
+                    acc[mode] = document.getElementById(`mode-${mode}`).checked;
+                    return acc;
+                }, {})
+            };
 
-            // Play the current sequence
-            playInRandomKey();
-
-            // Calculate the total duration before the next sequence
-            const bpm = parseInt(bpmSlider.value);
-            const beatDuration = 60 / bpm;
-            const noteCount = parseInt(document.getElementById('noteCount').value);
-            const gapBeats = parseInt(document.getElementById('gapBeats').value);
-            
-            // Total duration = initial chord (2 beats) + melody beats + gap beats
-            const totalDuration = (2 + noteCount + gapBeats) * beatDuration * 1000; // Convert to milliseconds
-
-            // Schedule the next sequence
-            autoplayTimeout = setTimeout(playAutoSequence, totalDuration);
+            localStorage.setItem('melodyGeneratorSettings', JSON.stringify(settings));
         }
 
-        function playInRandomKey() {
-            const key = keys[Math.floor(Math.random() * keys.length)];
-            const mode = getRandomMode();
-            const startingNoteInfo = getRandomNaturalNote(key.frequency, mode);
-            
-            // Update the displays
-            document.getElementById('melodyInfo').textContent = 
-                `${key.name} ${mode.name}, Start on ${startingNoteInfo.scaleDegree}`;
-            document.getElementById('alteredNotes').textContent = getAlteredNotes(mode);
-            
-            const beatDuration = getBeatDuration();
-            const startTime = audioContext.currentTime;
-            
-            playChord(key.frequency, mode, startTime, beatDuration * 2);
-            playMelodyInKey(key.frequency, mode, startTime + (beatDuration * 2), beatDuration, startingNoteInfo);
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('melodyGeneratorSettings');
+            if (!savedSettings) return;
+
+            try {
+                const settings = JSON.parse(savedSettings);
+
+                // Restore slider values
+                bpmSlider.value = settings.bpm;
+                bpmValue.textContent = `${settings.bpm} BPM`;
+
+                accidentalSlider.value = settings.accidentalProb;
+                accidentalValue.textContent = `${Math.round(settings.accidentalProb * 100)}% Accidentals`;
+
+                jumpinessSlider.value = settings.jumpiness;
+                jumpinessValue.textContent = `Jumpiness: ${settings.jumpiness}%`;
+
+                quaverSlider.value = settings.quaverProb;
+                quaverValue.textContent = `${settings.quaverProb}% Eighth notes`;
+
+                // Restore number inputs
+                document.getElementById('noteCount').value = settings.noteCount;
+                document.getElementById('gapBeats').value = settings.gapBeats;
+
+                // Restore mode selections
+                Object.keys(settings.modes).forEach(mode => {
+                    const checkbox = document.getElementById(`mode-${mode}`);
+                    if (checkbox) checkbox.checked = settings.modes[mode];
+                });
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
         }
+
+        // Add event listeners to save settings when values change
+        function addSaveListeners() {
+            const elements = [
+                bpmSlider,
+                accidentalSlider,
+                jumpinessSlider,
+                quaverSlider,
+                document.getElementById('noteCount'),
+                document.getElementById('gapBeats')
+            ];
+
+            elements.forEach(element => {
+                element.addEventListener('change', saveSettings);
+            });
+
+            // Add listeners to mode checkboxes
+            Object.keys(modes).forEach(mode => {
+                const checkbox = document.getElementById(`mode-${mode}`);
+                if (checkbox) checkbox.addEventListener('change', saveSettings);
+            });
+        }
+
+        // Update the selectAllModes and clearAllModes functions to save settings
+        const originalSelectAllModes = selectAllModes;
+        selectAllModes = function () {
+            originalSelectAllModes();
+            saveSettings();
+        };
+
+        const originalClearAllModes = clearAllModes;
+        clearAllModes = function () {
+            originalClearAllModes();
+            saveSettings();
+        };
+
+        // Initialize settings when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            addSaveListeners();
+        });
 
     </script>
 </body>
+
 </html>
