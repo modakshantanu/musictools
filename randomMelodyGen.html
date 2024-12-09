@@ -603,7 +603,7 @@
             const key = keys[Math.floor(Math.random() * keys.length)];
             const mode = getRandomMode();
             const startingNoteInfo = getRandomNaturalNote(key.frequency, mode);
-            const noteCount = parseInt(document.getElementById('noteCount').value);
+            const beatCount = parseInt(document.getElementById('noteCount').value);
             const quaverProb = parseFloat(document.getElementById('quaverSlider').value) / 100;
 
             let melody = {
@@ -616,30 +616,33 @@
             let currentNoteIndex = startingNoteInfo.index;
 
             // First note (always full beat)
-            melody.notes.push({
-                frequency: startingNoteInfo.frequency,
-                duration: 1 // full beat
-            });
+            // melody.notes.push({
+            //     frequency: startingNoteInfo.frequency,
+            //     duration: 1 // full beat
+            // });
 
-            for (let i = 1; i < noteCount; i++) {
+            for (let i = 0; i < beatCount; i++) {
                 const isQuaver = Math.random() < quaverProb;
                 const duration = isQuaver ? 0.5 : 1;
 
-                const nextNote = getRandomScaleNote(key.frequency, mode, currentNoteIndex);
+
+
+                const nextNote = i == 0 ? startingNoteInfo: getRandomScaleNote(key.frequency, mode, currentNoteIndex);
+                
+                
                 melody.notes.push({
                     frequency: nextNote.frequency,
                     duration: duration
                 });
 
                 // If this was a quaver, we need another note to complete the beat
-                if (isQuaver && i < noteCount - 1) {
+                if (isQuaver) {
                     const secondQuaver = getRandomScaleNote(key.frequency, mode, nextNote.index);
                     melody.notes.push({
                         frequency: secondQuaver.frequency,
                         duration: 0.5
                     });
                     currentNoteIndex = secondQuaver.index;
-                    i++; // Increment i since we've added two notes
                 } else {
                     currentNoteIndex = nextNote.index;
                 }
