@@ -167,9 +167,11 @@
 <body>
     <div class="melody-info" id="melodyInfo"></div>
     <div class="melody-info" id="alteredNotes" style="font-size: 18px;"></div>
+    <div class="melody-info" id="sargamDisplay" style="font-size: 18px;"></div>
     <div class="play-controls">
         <button onclick="playInRandomKey()">Generate random melody</button>
         <button onclick="replayLastMelody()">Replay last melody</button>
+        <button onclick="showSargam()">Show Sargam</button>
         <button onclick="startAutoplay()" id="autoplayButton">Autoplay</button>
         <button onclick="stopAutoplay()">Stop</button>
     </div>
@@ -200,6 +202,10 @@
         <div class="control">
             <span>Beats gap between rounds:</span>
             <input type="number" id="gapBeats" min="1" max="32" value="12">
+        </div>
+        <div class="control">
+            <span>Auto show solution after X beats (-1 to never show):</span>
+            <input type="number" id="sargamDelay" min="-1" max="64" value="-1">
         </div>
         <div class="modes-container">
             <div class="mode-option">
@@ -627,9 +633,9 @@
 
 
 
-                const nextNote = i == 0 ? startingNoteInfo: getRandomScaleNote(key.frequency, mode, currentNoteIndex);
-                
-                
+                const nextNote = i == 0 ? startingNoteInfo : getRandomScaleNote(key.frequency, mode, currentNoteIndex);
+
+
                 melody.notes.push({
                     frequency: nextNote.frequency,
                     duration: duration
@@ -651,7 +657,15 @@
             return melody;
         }
 
+        let sargamShowTimer = null;
+
         function playMelody(melody) {
+            // Clear any existing timer
+            if (sargamShowTimer) {
+                clearTimeout(sargamShowTimer);
+                sargamShowTimer = null;
+            }
+
             const beatDuration = getBeatDuration();
             const startTime = audioContext.currentTime;
 
@@ -659,6 +673,18 @@
             document.getElementById('melodyInfo').textContent =
                 `${melody.key.name} ${melody.mode.name}, Start on ${melody.startingNote.scaleDegree}`;
             document.getElementById('alteredNotes').textContent = getAlteredNotes(melody.mode);
+
+            // Clear any existing sargam display
+            clearSargam();
+
+            // Handle auto-show sargam
+            const delayBeats =  parseInt(document.getElementById('sargamDelay').value);
+            if (delayBeats >= 0) {
+                const delayMs = delayBeats * beatDuration * 1000;
+                sargamShowTimer = setTimeout(() => {
+                    showSargam();
+                }, delayMs);
+            }
 
             // Play initial chord
             playChord(melody.key.frequency, melody.mode, startTime, beatDuration * 2);
@@ -673,6 +699,7 @@
 
         function playInRandomKey() {
             lastMelody = generateMelody();
+            clearSargam();
             playMelody(lastMelody);
         }
 
@@ -758,6 +785,7 @@
                 quaverProb: quaverSlider.value,
                 noteCount: document.getElementById('noteCount').value,
                 gapBeats: document.getElementById('gapBeats').value,
+                sargamDelay: document.getElementById('sargamDelay').value, 
                 modes: Object.keys(modes).reduce((acc, mode) => {
                     acc[mode] = document.getElementById(`mode-${mode}`).checked;
                     return acc;
@@ -766,6 +794,7 @@
 
             localStorage.setItem('melodyGeneratorSettings', JSON.stringify(settings));
         }
+
 
         function loadSettings() {
             const savedSettings = localStorage.getItem('melodyGeneratorSettings');
@@ -786,6 +815,8 @@
 
                 quaverSlider.value = settings.quaverProb;
                 quaverValue.textContent = `${settings.quaverProb}% Eighth notes`;
+
+                document.getElementById('sargamDelay').value = settings.sargamDelay || -1;
 
                 // Restore number inputs
                 document.getElementById('noteCount').value = settings.noteCount;
@@ -841,6 +872,109 @@
             loadSettings();
             addSaveListeners();
         });
+
+        function getMelodySargam(melody) {
+            // Helper to get expected scale degrees for a mode
+            function getModeScaleDegrees(mode) {
+                let degrees = [0, 2, 4, 5, 7, 9, 11]; // Major scale degrees
+
+                // Apply mode alterations
+                if (mode.degrees[0]) degrees[1] = 1;  // Re becomes komal
+                if (mode.degrees[1]) degrees[2] = 3;  // Ga becomes komal
+                if (mode.degrees[2]) degrees[3] = 6;  // Ma becomes tivra
+                if (mode.degrees[3]) degrees[5] = 8;  // Dha becomes komal
+                if (mode.degrees[4]) degrees[6] = 10; // Ni becomes komal
+
+                return degrees;
+            }
+
+            function getScaleDegree(frequency, rootFrequency) {
+                // Calculate the frequency ratio
+                const ratio = frequency / rootFrequency;
+
+                // Use logarithm to find number of semitones
+                // Since each semitone is the 12th root of 2 apart:
+                // semitones = log_2(ratio) * 12
+                // We can rewrite this using natural log:
+                // semitones = ln(ratio) / ln(2) * 12
+                const semitones = Math.round(Math.log(ratio) / Math.log(2) * 12);
+
+                // Convert to 0-11 scale degree
+                return ((semitones % 12) + 12) % 12; // Adding 12 before mod handles negative numbers
+            }
+
+
+
+            // Map scale degrees (0-11) to sargam symbols
+            function getBaseSargam(scaleDegree) {
+                const sargamMap = ['S', 'r', 'R', 'g', 'G', 'm', 'M', 'P', 'd', 'D', 'n', 'N'];
+                return sargamMap[scaleDegree];
+            }
+
+            const modeScaleDegrees = getModeScaleDegrees(melody.mode);
+
+            return melody.notes.map(note => {
+                const scaleDegree = getScaleDegree(note.frequency, melody.key.frequency);
+                const sargam = getBaseSargam(scaleDegree);
+
+                // Check if this scale degree is part of the mode
+                const isAccidental = !modeScaleDegrees.includes(scaleDegree);
+
+                return [sargam, isAccidental];
+            });
+        }
+
+        function formatSargamDisplay(melody) {
+            if (!melody) return '';
+
+            const sargamInfo = getMelodySargam(melody);
+
+            // Group notes by beats based on their durations
+            let beats = [];
+            let currentBeat = [];
+            let currentDuration = 0;
+
+            for (let i = 0; i < melody.notes.length; i++) {
+                const note = melody.notes[i];
+                const [sargam, isAccidental] = sargamInfo[i];
+
+                currentBeat.push({
+                    sargam,
+                    isAccidental,
+                    duration: note.duration
+                });
+
+                currentDuration += note.duration;
+
+                if (currentDuration >= 1 || i === melody.notes.length - 1) {
+                    beats.push(currentBeat);
+                    currentBeat = [];
+                    currentDuration = 0;
+                }
+            }
+
+            // Format each beat
+            return beats.map(beat => {
+                const formattedNotes = beat.map(note => {
+                    const style = note.isAccidental ? 'color: #e74c3c;' : ''; // Red for accidentals
+                    return `<span style="${style}">${note.sargam}</span>`;
+                }).join(' ');
+
+                return `<span style="border-right: 1px solid #ccc; padding: 0 10px;">${formattedNotes}</span>`;
+            }).join(' ');
+        }
+
+        function showSargam() {
+            if (!lastMelody) return;
+
+            const display = document.getElementById('sargamDisplay');
+            display.innerHTML = formatSargamDisplay(lastMelody);
+        }
+
+        function clearSargam() {
+            document.getElementById('sargamDisplay').textContent = '';
+        }
+
 
     </script>
 </body>
