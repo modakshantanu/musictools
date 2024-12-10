@@ -728,35 +728,9 @@
         let sargamShowTimer = null;
 
         function playMelody(melody) {
-            // Clear any existing timer
-            if (sargamShowTimer) {
-                clearTimeout(sargamShowTimer);
-                sargamShowTimer = null;
-            }
 
             const beatDuration = getBeatDuration();
             const startTime = audioContext.currentTime;
-
-            // Update the displays
-            const shouldShowScaleInfo = document.getElementById('hideScale').checked && !document.getElementById('sargamDisplay').textContent;
-            document.getElementById('melodyInfo').textContent = shouldShowScaleInfo ?
-                `${melody.key.name} <hidden scale & start note>` :
-                `${melody.key.name} ${melody.mode.name}, Start on ${melody.startingNote.scaleDegree}`;
-
-            document.getElementById('alteredNotes').textContent = shouldShowScaleInfo ?  "<hidden scale description>": melody.mode.description ;
-
-            // Clear any existing sargam display
-            clearSargam();
-
-            // Handle auto-show sargam
-            const delayBeats = parseInt(document.getElementById('sargamDelay').value);
-            if (delayBeats >= 0) {
-                const delayMs = (delayBeats + 2) * beatDuration * 1000;
-                sargamShowTimer = setTimeout(() => {
-                    showSargam();
-                }, delayMs);
-            }
-
             // Play initial chord
             playChord(melody.key.frequency, melody.mode, startTime, beatDuration * 2);
 
@@ -771,6 +745,36 @@
         function playInRandomKey() {
             lastMelody = generateMelody();
             clearSargam();
+
+            // Clear any existing timer
+            if (sargamShowTimer) {
+                clearTimeout(sargamShowTimer);
+                sargamShowTimer = null;
+            }
+
+            const beatDuration = getBeatDuration();
+            const startTime = audioContext.currentTime;
+
+            // Update the displays
+            const shouldShowScaleInfo = document.getElementById('hideScale').checked && !document.getElementById('sargamDisplay').textContent;
+            document.getElementById('melodyInfo').textContent = shouldShowScaleInfo ?
+                `${lastMelody.key.name} <hidden scale & start note>` :
+                `${lastMelody.key.name} ${lastMelody.mode.name}, Start on ${lastMelody.startingNote.scaleDegree}`;
+
+            document.getElementById('alteredNotes').textContent = shouldShowScaleInfo ? "<hidden scale description>" : lastMelody.mode.description;
+
+            // Clear any existing sargam display
+            clearSargam();
+
+            // Handle auto-show sargam
+            const delayBeats = parseInt(document.getElementById('sargamDelay').value);
+            if (delayBeats >= 0) {
+                const delayMs = (delayBeats + 2) * beatDuration * 1000;
+                sargamShowTimer = setTimeout(() => {
+                    showSargam();
+                }, delayMs);
+            }
+
             playMelody(lastMelody);
         }
 
