@@ -171,7 +171,7 @@
     <div class="play-controls">
         <button onclick="playInRandomKey()">Generate random melody</button>
         <button onclick="replayLastMelody()">Replay last melody</button>
-        <button onclick="showSargam()">Show Sargam</button>
+        <button onclick="showSargam()">Show Solution</button>
         <button onclick="startAutoplay()" id="autoplayButton">Autoplay</button>
         <button onclick="stopAutoplay()">Stop</button>
     </div>
@@ -206,6 +206,10 @@
         <div class="control">
             <span>Auto show solution after X beats (-1 to never show):</span>
             <input type="number" id="sargamDelay" min="-1" max="64" value="-1">
+        </div>
+        <div class="control">
+            <span>Hide Scale and starting note:</span>
+            <input type="checkbox" id="hideScale">
         </div>
         <div class="modes-container">
             <div class="mode-option">
@@ -327,7 +331,7 @@
             },
             phrygian: {
                 name: "Phrygian (Bhairavi)",
-                degrees: [true, true, false, false, true],
+                degrees: [true, true, false, true, true],
                 chordType: "minor"
             },
             lydian: {
@@ -670,8 +674,10 @@
             const startTime = audioContext.currentTime;
 
             // Update the displays
-            document.getElementById('melodyInfo').textContent =
+            document.getElementById('melodyInfo').textContent = document.getElementById('hideScale').checked && !document.getElementById('sargamDisplay').textContent ? 
+                `${melody.key.name} <hidden scale & start note>` :
                 `${melody.key.name} ${melody.mode.name}, Start on ${melody.startingNote.scaleDegree}`;
+
             document.getElementById('alteredNotes').textContent = getAlteredNotes(melody.mode);
 
             // Clear any existing sargam display
@@ -786,6 +792,7 @@
                 noteCount: document.getElementById('noteCount').value,
                 gapBeats: document.getElementById('gapBeats').value,
                 sargamDelay: document.getElementById('sargamDelay').value, 
+                hideScale: document.getElementById('hideScale').checked,
                 modes: Object.keys(modes).reduce((acc, mode) => {
                     acc[mode] = document.getElementById(`mode-${mode}`).checked;
                     return acc;
@@ -822,6 +829,8 @@
                 document.getElementById('noteCount').value = settings.noteCount;
                 document.getElementById('gapBeats').value = settings.gapBeats;
 
+                document.getElementById('hideScale').checked = settings.hideScale || false;
+
                 // Restore mode selections
                 Object.keys(settings.modes).forEach(mode => {
                     const checkbox = document.getElementById(`mode-${mode}`);
@@ -847,6 +856,8 @@
             elements.forEach(element => {
                 element.addEventListener('change', saveSettings);
             });
+
+            document.getElementById('hideScale').addEventListener('change', saveSettings);
 
             // Add listeners to mode checkboxes
             Object.keys(modes).forEach(mode => {
@@ -970,6 +981,9 @@
 
             const display = document.getElementById('sargamDisplay');
             display.innerHTML = formatSargamDisplay(lastMelody);
+
+            document.getElementById('melodyInfo').textContent = 
+                `${lastMelody.key.name} ${lastMelody.mode.name}, Start on ${lastMelody.startingNote.scaleDegree}`;
         }
 
         function clearSargam() {
